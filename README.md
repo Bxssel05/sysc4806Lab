@@ -1,5 +1,7 @@
 # sysc4806Lab: Simple Spring MVC AddressBook App
 
+[![Java CI with Maven](https://github.com/Bxssel05/sysc4806Lab/actions/workflows/maven.yml/badge.svg)](https://github.com/Bxssel05/sysc4806Lab/actions/workflows/maven.yml)
+
 Uses Spring Boot, Spring MVC, Spring Data JPA, H2 and Thymeleaf.
 
 ## Run

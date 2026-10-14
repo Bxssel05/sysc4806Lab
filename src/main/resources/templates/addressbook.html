@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>sysc4806Lab AddressBook</title></head>
+<body>
+<main>
+    <section th:if="${addressBook != null}">
+        <h1 th:text="|Address Book ${addressBook.id}|">Address Book</h1>
+        <p th:if="${#lists.isEmpty(addressBook.buddies)}">This address book has no buddies yet.</p>
+        <table th:unless="${#lists.isEmpty(addressBook.buddies)}">
+            <thead><tr><th>ID</th><th>Name</th><th>Phone number</th></tr></thead>
+            <tbody><tr th:each="buddy : ${addressBook.buddies}">
+                <td th:text="${buddy.id}"></td>
+                <td th:text="${buddy.name}"></td>
+                <td th:text="${buddy.phoneNumber}"></td>
+            </tr></tbody>
+        </table>
+    </section>
+    <section th:if="${missingId != null}">
+        <h1>Address book not found</h1>
+        <p th:text="|No address book exists with ID ${missingId}.|"></p>
+    </section>
+</main>
+</body>
+</html>

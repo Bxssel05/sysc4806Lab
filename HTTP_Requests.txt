@@ -1,0 +1,44 @@
+sysc4806Lab HTTP requests (run the application on localhost:8080 first).
+Run these requests in order. Creation returns HTTP 201 with an id in the JSON
+and a Location header. Copy each returned id into the placeholders below;
+never assume generated IDs. Association needs no request body.
+Paste each request into Postman or an IntelliJ scratch .http file (replace
+<addressBookId>, <firstBuddyId>, and <secondBuddyId> with returned numbers).
+Use the final GET URL in a browser for the Thymeleaf page.
+
+### 1. Create an address book; record its returned id as addressBookId
+POST http://localhost:8080/api/addressbooks
+Content-Type: application/json
+Accept: application/json
+
+{}
+
+### 2. Create first buddy; record its returned id as firstBuddyId
+POST http://localhost:8080/api/buddies
+Content-Type: application/json
+Accept: application/json
+
+{"name":"Ada Lovelace","phoneNumber":"555-0100"}
+
+### 3. Create second buddy; record its returned id as secondBuddyId
+POST http://localhost:8080/api/buddies
+Content-Type: application/json
+Accept: application/json
+
+{"name":"Grace Hopper","phoneNumber":"555-0101"}
+
+### 4. Add the first buddy
+POST http://localhost:8080/api/addressbooks/<addressBookId>/buddies/<firstBuddyId>
+Accept: application/json
+
+### 5. Add the second buddy
+POST http://localhost:8080/api/addressbooks/<addressBookId>/buddies/<secondBuddyId>
+Accept: application/json
+
+### 6. Retrieve the persisted address book and buddies
+GET http://localhost:8080/api/addressbooks/<addressBookId>
+Accept: application/json
+
+### 7. Open this URL in your browser
+GET http://localhost:8080/addressbooks/<addressBookId>/view
+Accept: text/html

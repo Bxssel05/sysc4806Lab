@@ -26,11 +26,13 @@ public class AddressBookRestController {
         return ResponseEntity.created(URI.create("/api/addressbooks/" + book.getId())).body(book);
     }
 
-    public record BuddyRequest(String name, String phoneNumber) {}
+    public record BuddyRequest(String name, String phoneNumber, String address) {}
 
     @PostMapping(value = "/buddies", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<BuddyInfo> createBuddy(@RequestBody BuddyRequest request) {
-        BuddyInfo buddy = buddies.save(new BuddyInfo(request.name(), request.phoneNumber()));
+        BuddyInfo buddy = new BuddyInfo(request.name(), request.phoneNumber());
+        buddy.setAddress(request.address());
+        buddy = buddies.save(buddy);
         return ResponseEntity.created(URI.create("/api/buddies/" + buddy.getId())).body(buddy);
     }
 

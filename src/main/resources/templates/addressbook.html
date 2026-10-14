@@ -7,11 +7,12 @@
         <h1 th:text="|Address Book ${addressBook.id}|">Address Book</h1>
         <p th:if="${#lists.isEmpty(addressBook.buddies)}">This address book has no buddies yet.</p>
         <table th:unless="${#lists.isEmpty(addressBook.buddies)}">
-            <thead><tr><th>ID</th><th>Name</th><th>Phone number</th></tr></thead>
+            <thead><tr><th>ID</th><th>Name</th><th>Phone number</th><th>Address</th></tr></thead>
             <tbody><tr th:each="buddy : ${addressBook.buddies}">
                 <td th:text="${buddy.id}"></td>
                 <td th:text="${buddy.name}"></td>
                 <td th:text="${buddy.phoneNumber}"></td>
+                <td th:text="${buddy.address}"></td>
             </tr></tbody>
         </table>
     </section>

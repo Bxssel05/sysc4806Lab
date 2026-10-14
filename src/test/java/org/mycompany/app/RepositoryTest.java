@@ -24,7 +24,9 @@ class RepositoryTest {
     void savesAndRetrievesAddressBookAcrossTransactions() {
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
         Long bookId = transaction.execute(status -> {
-            BuddyInfo ada = buddies.save(new BuddyInfo("Ada Lovelace", "555-0100"));
+            BuddyInfo ada = new BuddyInfo("Ada Lovelace", "555-0100");
+            ada.setAddress("1125 Colonel By Drive");
+            ada = buddies.save(ada);
             BuddyInfo grace = buddies.save(new BuddyInfo("Grace Hopper", "555-0101"));
             assertThat(ada.getId()).isNotNull();
             assertThat(grace.getId()).isNotNull();
@@ -42,6 +44,9 @@ class RepositoryTest {
                         new BuddyInfo("Grace Hopper", "555-0101"));
                 for (BuddyInfo buddy : loaded.getBuddies()) {
                     assertThat(buddies.findById(buddy.getId())).contains(buddy);
+                    if (buddy.getName().equals("Ada Lovelace")) {
+                        assertThat(buddy.getAddress()).isEqualTo("1125 Colonel By Drive");
+                    }
                 }
                 assertThat(addressBooks.findAll()).extracting(AddressBook::getId).contains(bookId);
             });

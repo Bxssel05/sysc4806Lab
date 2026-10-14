@@ -57,6 +57,7 @@ class WebIntegrationTest {
         assertThat(buddy.getId()).isPositive();
         assertThat(buddy.getName()).isEqualTo("Alan Turing");
         assertThat(buddy.getPhoneNumber()).isEqualTo("555-0102");
+        assertThat(buddy.getAddress()).isNull();
         assertThat(buddyResponse.getResponseHeaders().getLocation())
                 .hasToString("/api/buddies/" + buddy.getId());
     }
@@ -81,6 +82,26 @@ class WebIntegrationTest {
                 .andExpect(status().isOk()).andExpect(view().name("addressbook"))
                 .andReturn().getResponse().getContentAsString();
         assertThat(html).contains("Ada Lovelace", "Grace Hopper", "555-0100", "555-0101");
+    }
+
+    @Test
+    void savesAndDisplaysBuddyAddressAcrossRequests() throws Exception {
+        long book = create("/api/addressbooks", "{}").get("id").asLong();
+        JsonNode buddy = create("/api/buddies",
+                "{\"name\":\"Address Buddy\",\"phoneNumber\":\"555-0103\",\"address\":\"1125 Colonel By Drive\"}");
+        assertThat(buddy.get("address").asText()).isEqualTo("1125 Colonel By Drive");
+        mvc.perform(post("/api/addressbooks/" + book + "/buddies/" + buddy.get("id").asLong()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.buddies[0].address").value("1125 Colonel By Drive"));
+        mvc.perform(get("/api/addressbooks/" + book))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.buddies[0].name").value("Address Buddy"))
+                .andExpect(jsonPath("$.buddies[0].phoneNumber").value("555-0103"))
+                .andExpect(jsonPath("$.buddies[0].address").value("1125 Colonel By Drive"));
+        mvc.perform(get("/addressbooks/" + book + "/view"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<th>Address</th>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("1125 Colonel By Drive")));
     }
 
     @Test

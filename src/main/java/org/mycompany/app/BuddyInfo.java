@@ -10,6 +10,7 @@ public class BuddyInfo {
     private Long id;
     private String name;
     private String phoneNumber;
+    private String address;
 
     public BuddyInfo(){
 
@@ -50,6 +51,14 @@ public class BuddyInfo {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getAddress(){
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     @Override

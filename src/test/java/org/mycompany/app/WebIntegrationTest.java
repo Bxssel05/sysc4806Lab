@@ -19,6 +19,79 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WebIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired JsonMapper json;
+    @Autowired AddressBookRepository addressBooks;
+    @Autowired BuddyInfoRepository buddies;
+
+    @Test
+    void buddyFormPersistsInSelectedBookAndDisplaysAfterRedirect() throws Exception {
+        long selected = create("/api/addressbooks", "{}").get("id").asLong();
+        long other = create("/api/addressbooks", "{}").get("id").asLong();
+        long existing = create("/api/buddies", "{\"name\":\"Existing Buddy\",\"phoneNumber\":\"555-0100\"}")
+                .get("id").asLong();
+        mvc.perform(post("/api/addressbooks/" + selected + "/buddies/" + existing))
+                .andExpect(status().isOk());
+        String page = "/addressbooks/" + selected + "/view";
+        String html = mvc.perform(get(page)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(html).contains("action=\"/addressbooks/" + selected + "/buddies\"", "method=\"post\"",
+                "name=\"name\"", "name=\"phoneNumber\"", "name=\"address\"")
+                .doesNotContain("name=\"id\"");
+        long before = buddies.count();
+        mvc.perform(post("/addressbooks/" + selected + "/buddies")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("name", "New Buddy").param("phoneNumber", "555-0199")
+                        .param("address", "1125 Colonel By Drive"))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(page));
+        assertThat(buddies.count()).isEqualTo(before + 1);
+        mvc.perform(get("/api/addressbooks/" + selected))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.buddies.length()").value(2))
+                .andExpect(jsonPath("$.buddies[?(@.name == 'New Buddy')].phoneNumber").value(org.hamcrest.Matchers.contains("555-0199")))
+                .andExpect(jsonPath("$.buddies[?(@.name == 'New Buddy')].address").value(org.hamcrest.Matchers.contains("1125 Colonel By Drive")));
+        mvc.perform(get("/api/addressbooks/" + other))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.buddies").isEmpty());
+        html = mvc.perform(get(page)).andExpect(status().isOk()).andExpect(view().name("addressbook"))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(html).contains("Existing Buddy", "<td>New Buddy</td>", "<td>555-0199</td>",
+                "<td>1125 Colonel By Drive</td>");
+    }
+
+    @Test
+    void buddyFormForMissingBookReturns404WithoutSavingBuddy() throws Exception {
+        long before = buddies.count();
+        mvc.perform(post("/addressbooks/9223372036854775807/buddies")
+                        .param("name", "Missing Book Buddy").param("phoneNumber", "555-0198").param("address", "Ottawa"))
+                .andExpect(status().isNotFound());
+        assertThat(buddies.count()).isEqualTo(before);
+    }
+
+    @Test
+    void homepageListsAddressBooksWithLinksAndCreationForm() throws Exception {
+        Long first = addressBooks.save(new AddressBook()).getId();
+        Long second = addressBooks.save(new AddressBook()).getId();
+        mvc.perform(get("/"))
+                .andExpect(status().isOk()).andExpect(view().name("index"))
+                .andExpect(xpath("//table/tbody/tr/td/a[@href='/addressbooks/" + first + "/view']").string(first.toString()))
+                .andExpect(xpath("//table/tbody/tr/td/a[@href='/addressbooks/" + second + "/view']").string(second.toString()))
+                .andExpect(xpath("//form[@action='/addressbooks'][@method='post']/button[@type='submit']").exists());
+        mvc.perform(get("/addressbooks/" + first + "/view"))
+                .andExpect(status().isOk()).andExpect(view().name("addressbook"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Address Book " + first)));
+    }
+
+    @Test
+    void addressBookFormPersistsAndRedirectsHome() throws Exception {
+        long before = addressBooks.count();
+        mvc.perform(post("/addressbooks").contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/"));
+        assertThat(addressBooks.count()).isEqualTo(before + 1);
+        for (AddressBook book : addressBooks.findAll()) {
+            mvc.perform(get("/"))
+                    .andExpect(status().isOk())
+                    .andExpect(xpath("//table/tbody/tr/td/a[@href='/addressbooks/" + book.getId() + "/view']")
+                            .string(book.getId().toString()));
+        }
+    }
 
     private JsonNode create(String path, String body) throws Exception {
         return json.readTree(mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(body))

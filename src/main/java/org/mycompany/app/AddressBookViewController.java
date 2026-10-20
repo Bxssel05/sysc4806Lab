@@ -7,6 +7,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 public class AddressBookViewController {
@@ -26,6 +28,19 @@ public class AddressBookViewController {
     public String createAddressBook() {
         addressBooks.save(new AddressBook());
         return "redirect:/";
+    }
+
+    @PostMapping("/addressbooks/{id}/buddies")
+    @Transactional
+    public String addBuddy(@PathVariable Long id, @RequestParam String name,
+                           @RequestParam String phoneNumber, @RequestParam String address) {
+        AddressBook book = addressBooks.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Address book not found"));
+        BuddyInfo buddy = new BuddyInfo(name, phoneNumber);
+        buddy.setAddress(address);
+        book.addBuddy(buddy);
+        addressBooks.save(book);
+        return "redirect:/addressbooks/" + id + "/view";
     }
 
     @GetMapping("/addressbooks/{id}/view")

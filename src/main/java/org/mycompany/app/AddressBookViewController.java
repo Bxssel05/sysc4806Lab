@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
 public class AddressBookViewController {
@@ -13,6 +14,18 @@ public class AddressBookViewController {
 
     public AddressBookViewController(AddressBookRepository addressBooks) {
         this.addressBooks = addressBooks;
+    }
+
+    @GetMapping("/")
+    public String home(Model model) {
+        model.addAttribute("addressBooks", addressBooks.findAll());
+        return "index";
+    }
+
+    @PostMapping("/addressbooks")
+    public String createAddressBook() {
+        addressBooks.save(new AddressBook());
+        return "redirect:/";
     }
 
     @GetMapping("/addressbooks/{id}/view")
